@@ -1,0 +1,10 @@
+python-telegram-bot
+google-generativeai
+feedparser
+python-dotenv
+matplotlib
+wordcloud
+numpy
+yfinance
+pycoingecko
+apscheduler
