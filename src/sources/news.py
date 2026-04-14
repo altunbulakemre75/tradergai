@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 
 import feedparser
 
+from ..cache import get as cache_get, set as cache_set
 from ..config import MAX_NEWS_ITEMS, NEWS_LOOKBACK_HOURS
 
 logger = logging.getLogger(__name__)
@@ -19,8 +20,6 @@ CRYPTO_TICKERS = {
 
 RSS_SOURCES = [
     "https://news.google.com/rss/search?q={query}&hl=tr&gl=TR&ceid=TR:tr",
-    "https://www.bloomberght.com/rss?query={query}",
-    "https://www.mynet.com/finans/rss?q={query}",
 ]
 
 CRYPTO_NAMES = {
@@ -44,6 +43,12 @@ def fetch_news(
     hours: int = NEWS_LOOKBACK_HOURS,
     limit: int = MAX_NEWS_ITEMS,
 ) -> list[NewsItem]:
+    cache_key = f"news:{ticker}:{hours}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        logger.info("Cache hit: news for %s", ticker)
+        return cached
+
     queries = _build_queries(ticker)
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     seen: set[str] = set()
@@ -77,8 +82,10 @@ def fetch_news(
             break
 
     items.sort(key=lambda i: i.published, reverse=True)
-    logger.info("Found %d unique news items for %s", len(items[:limit]), ticker)
-    return items[:limit]
+    result = items[:limit]
+    cache_set(cache_key, result)
+    logger.info("Found %d unique news items for %s", len(result), ticker)
+    return result
 
 
 def _build_queries(ticker: str) -> list[str]:

@@ -10,7 +10,6 @@ from telegram.constants import ParseMode
 
 from .analyzer import analyze
 from .db import get_all_subscribed_users
-from .formatter import format_analysis, format_no_news
 from .sources.market import get_market_data
 from .sources.news import fetch_news
 

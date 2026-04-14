@@ -28,23 +28,10 @@ class AnalysisResult:
     catalyst: str = ""      # Ana katalizör
 
 
-PROMPT_TEMPLATE = """Sen deneyimli bir Türk finansal analistisin. Aşağıda {ticker} ile ilgili son {hours} saatteki haberler var.
-
-Haberler:
+PROMPT_TEMPLATE = """Finansal analist. {ticker} haberleri:
 {news_block}
-
-Aşağıdaki JSON formatında Türkçe analiz yap. SADECE JSON döndür, başka hiçbir metin ekleme:
-{{
-  "sentiment": "pozitif" veya "negatif" veya "nötr",
-  "score": 0-100 (sentiment şiddeti),
-  "keywords": ["3-5 anahtar kelime"],
-  "summary": "2-3 cümle genel değerlendirme",
-  "risk": "kısa risk notu (max 1 cümle, yoksa boş string)",
-  "opportunity": "kısa fırsat notu (max 1 cümle, yoksa boş string)",
-  "impact_duration": "kısa" veya "orta" veya "uzun",
-  "catalyst": "ana katalizör (1 cümle)"
-}}
-"""
+SADECE JSON döndür:
+{{"sentiment":"pozitif|negatif|nötr","score":0-100,"keywords":["kelime1","kelime2","kelime3"],"summary":"1-2 cümle","risk":"1 cümle veya boş","opportunity":"1 cümle veya boş","impact_duration":"kısa|orta|uzun","catalyst":"1 cümle"}}"""
 
 
 def analyze(ticker: str, news: list[NewsItem], hours: int = 24) -> AnalysisResult:

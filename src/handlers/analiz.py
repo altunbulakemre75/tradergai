@@ -9,7 +9,6 @@ from telegram.ext import ContextTypes
 
 from .. import formatter
 from ..analyzer import analyze
-from ..chart_generator import generate_gauge
 from ..db import ensure_user
 from ..sources.market import get_market_data
 from ..sources.news import fetch_news
@@ -35,14 +34,13 @@ async def analiz_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await update.message.reply_html(formatter.format_usage())
         return
 
-    for ticker in tickers[:3]:  # max 3 ticker aynı anda
+    for ticker in tickers[:3]:
         await _run_single(update, ticker)
 
 
 async def _run_single(update: Update, ticker: str) -> None:
-    # "Yazıyor..." animasyonu simüle et
     await update.message.chat.send_action(ChatAction.TYPING)
-    progress = await update.message.reply_html(f"🔎 <b>{ticker}</b> için veriler toplanıyor ve analiz ediliyor...")
+    progress = await update.message.reply_html(f"🔎 <b>{ticker}</b> analiz ediliyor...")
 
     try:
         news, market = await asyncio.gather(
@@ -56,35 +54,25 @@ async def _run_single(update: Update, ticker: str) -> None:
             )
             return
 
-        # "Fotoğraf yükleniyor..." animasyonu
-        await update.message.chat.send_action(ChatAction.UPLOAD_PHOTO)
-        
         result = await asyncio.to_thread(analyze, ticker, news)
-        
-        # Grafik üretimi
-        gauge_buf = await asyncio.to_thread(generate_gauge, result.score, f"{ticker} Sentiment")
-        
         message = formatter.format_analysis(ticker, result, len(news), market)
 
         keyboard = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("⭐ Takibe Al", callback_data=f"ekle:{ticker}"),
-                InlineKeyboardButton("📰 Haber Kaynağı", url=f"https://www.google.com/search?q={ticker}+hisse+haber&tbm=nws"),
+                InlineKeyboardButton("📰 Haberler", url=f"https://www.google.com/search?q={ticker}+hisse+haber&tbm=nws"),
             ],
             [
                 InlineKeyboardButton("📋 Son KAP Bildirimleri", callback_data=f"kap:{ticker}")
             ]
         ])
 
-        # Önceki yükleniyor mesajını silip görseli gönderiyoruz
-        await progress.delete()
-        await update.message.reply_photo(
-            photo=gauge_buf,
-            caption=message,
+        await progress.edit_text(
+            message,
             parse_mode=ParseMode.HTML,
-            reply_markup=keyboard
+            reply_markup=keyboard,
         )
-        
+
     except Exception:
         import logging
         logging.getLogger(__name__).exception("Analiz hatası: %s", ticker)

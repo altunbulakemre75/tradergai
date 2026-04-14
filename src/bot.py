@@ -6,6 +6,7 @@ from telegram.ext import (
     Application,
     CallbackQueryHandler,
     CommandHandler,
+    InlineQueryHandler,
     ContextTypes,
 )
 
@@ -15,6 +16,7 @@ from .handlers.analiz import analiz_cmd
 from .handlers.kap import kap_cmd
 from .handlers.takip import ekle_cmd, listem_cmd, sil_cmd
 from .handlers.top import top_cmd
+from .handlers.inline import inline_query
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ HELP = (
     "/sil &lt;HİSSE&gt; — Listeden çıkar\n"
     "/listem — Takip listeniz\n"
     "/top — Günün öne çıkanları\n\n"
-    "<i>İpucu: Birden fazla hisseyi boşlukla ayırarak analiz edebilirsiniz.</i>"
+    "<i>İpucu: Sadece @bot_adı THYAO yazarak diğer sohbetlerde de hızlı fiyat paylaşabilirsiniz.</i>"
 )
 
 
@@ -85,7 +87,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     elif data.startswith("kap:"):
         ticker = data.split(":", 1)[1]
         context.args = [ticker]
-        await kap_cmd(query, context)
+        await kap_cmd(update, context)
 
 
 def build_application() -> Application:
@@ -98,5 +100,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("sil", sil_cmd))
     app.add_handler(CommandHandler("listem", listem_cmd))
     app.add_handler(CommandHandler("top", top_cmd))
+    app.add_handler(InlineQueryHandler(inline_query))
     app.add_handler(CallbackQueryHandler(callback_handler))
     return app
+

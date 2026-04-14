@@ -5,12 +5,13 @@ from .sources.market import MarketData
 _EMOJI = {"pozitif": "🟢", "negatif": "🔴", "nötr": "🟡"}
 _LABEL = {"pozitif": "Pozitif", "negatif": "Negatif", "nötr": "Nötr"}
 
+
 def get_sentiment_bar(score: int) -> str:
-    """Üretilen skor için görsel bir bar oluşturur."""
     length = 10
     filled = int(round(score / 100 * length))
     bar = "█" * filled + "░" * (length - filled)
     return f"[{bar}] {score}%"
+
 
 def format_analysis(ticker: str, result: AnalysisResult, news_count: int, market: MarketData | None = None) -> str:
     emoji = _EMOJI.get(result.sentiment, "🟡")
@@ -22,7 +23,6 @@ def format_analysis(ticker: str, result: AnalysisResult, news_count: int, market
         f"━━━━━━━━━━━━━━",
     ]
 
-    # Piyasa Verisi (Eğer varsa)
     if market and market.price:
         change_emoji = "📈" if (market.change_pct or 0) >= 0 else "📉"
         change_str = f" ({market.change_pct:+.2f}%) {change_emoji}" if market.change_pct is not None else ""
@@ -38,13 +38,9 @@ def format_analysis(ticker: str, result: AnalysisResult, news_count: int, market
     if result.summary:
         lines.append(f"📝 <b>Özet:</b>\n<i>{result.summary}</i>\n")
 
-    if result.keywords:
-        kw = " • ".join(result.keywords)
-        lines.append(f"🔑 <b>Anahtar Kelimeler:</b>\n<code>{kw}</code>\n")
-
     if result.risk:
         lines.append(f"⚠️ <b>Risk Notu:</b> {result.risk}")
-    
+
     if result.opportunity:
         lines.append(f"💡 <b>Fırsat Notu:</b> {result.opportunity}")
 
